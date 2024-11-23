@@ -1,0 +1,32 @@
+const fetch = require('node-fetch'); // Asegúrate de instalar node-fetch en tu proyecto
+
+module.exports = async (req, res) => {
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // La clave API se almacenará en las variables de entorno
+
+    if (req.method === 'POST') {
+        const userMessage = req.body.message;
+
+        // Realiza la llamada a la API de OpenAI
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo", // Modelo que prefieras
+                messages: [{ role: "user", content: userMessage }],
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.choices && data.choices.length > 0) {
+            res.status(200).json({ response: data.choices[0].message.content });
+        } else {
+            res.status(500).json({ response: "No se pudo obtener una respuesta." });
+        }
+    } else {
+        res.status(405).json({ response: "Método no permitido." });
+    }
+};
