@@ -3,51 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Legal</title>
+    <title>Chat Legal</title>
+    <style>
+        /* Estilos básicos */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        #chat-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #messages {
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .message {
+            margin: 10px 0;
+        }
+        .user-message {
+            text-align: right;
+            color: #333;
+        }
+        .bot-message {
+            text-align: left;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
-    <h1>Chatbot Legal - Consultas sobre legislación Boliviana</h1>
-    <textarea id="userMessage" placeholder="Escribe tu consulta"></textarea>
-    <button onclick="sendMessage()">Enviar</button>
-    <p id="response"></p>
+
+    <div id="chat-container">
+        <div id="messages"></div>
+        <input type="text" id="user-input" placeholder="Escribe tu mensaje..." />
+    </div>
 
     <script>
-        async function sendMessage() {
-            const message = document.getElementById("userMessage").value;
+        // Obtener elementos
+        const inputField = document.getElementById('user-input');
+        const messagesDiv = document.getElementById('messages');
 
-            const response = await fetch('https://chatlegal1.vercel.app/', {
+        // Enviar mensaje cuando el usuario presiona Enter
+        inputField.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && inputField.value.trim() !== '') {
+                const userMessage = inputField.value;
+                sendMessage(userMessage); // Llamar a la función para enviar el mensaje
+                inputField.value = ''; // Limpiar el campo de entrada
+            }
+        });
+
+        // Función para enviar el mensaje al backend (API)
+        async function sendMessage(message) {
+            // Mostrar mensaje del usuario en el chat
+            messagesDiv.innerHTML += `<div class="message user-message"><strong>Usuario:</strong> ${message}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Hacer scroll hacia abajo
+
+            // Hacer solicitud al backend
+            const response = await fetch('https://tuservidor/api/chat', { // Cambia por la URL de tu servidor
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message })
             });
 
             const data = await response.json();
-            document.getElementById("response").innerText = data.response || "No se pudo obtener la respuesta.";
-const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-        model: "gpt-3.5-turbo", 
-        messages: [{ role: "user", content: userMessage }],
-    }),
-});
 
-const data = await response.json();
-
-console.log('Datos recibidos de OpenAI:', data); // Esto te ayudará a ver la respuesta de OpenAI
-
-if (data.choices && data.choices.length > 0) {
-    res.status(200).json({ response: data.choices[0].message.content });
-} else {
-    res.status(500).json({ response: "No se pudo obtener una respuesta." });
-}
-
+            // Mostrar respuesta del bot en el chat
+            if (data.response) {
+                messagesDiv.innerHTML += `<div class="message bot-message"><strong>Bot:</strong> ${data.response}</div>`;
+            } else {
+                messagesDiv.innerHTML += `<div class="message bot-message"><strong>Bot:</strong> Lo siento, no pude obtener una respuesta.</div>`;
+            }
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Hacer scroll hacia abajo
         }
     </script>
+
 </body>
 </html>
